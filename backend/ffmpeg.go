@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log/slog"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -53,6 +54,8 @@ func NewFFmpegTask(req ProcessRequest) (*FFmpegTask, error) {
 		UpdatedAt: time.Now(),
 	}
 
+	slog.Info("FFmpeg命令", "cmd", cmd.String())
+
 	// 返回任务实例
 	return &FFmpegTask{
 		ID:           taskID,
@@ -84,6 +87,8 @@ func buildFFmpegArgs(req ProcessRequest) []string {
 		req.OutputPath,
 	)
 
+	slog.Info("FFmpeg命令参数", "args", args)
+
 	return args
 }
 
@@ -101,6 +106,8 @@ func buildOverlayFilter(req ProcessRequest) string {
 	case "bottom-right":
 		position = "x=main_w-overlay_w:y=main_h-overlay_h"
 	}
+
+	slog.Info("水印位置设置", "position", position)
 
 	// 构建完整的滤镜字符串
 	return fmt.Sprintf(
@@ -127,6 +134,8 @@ func (t *FFmpegTask) Start() error {
 		t.Status.UpdatedAt = time.Now()
 		return fmt.Errorf("failed to start ffmpeg: %v", err)
 	}
+
+	slog.Info("FFmpeg任务启动", "taskID", t.ID)
 
 	// 等待命令完成
 	go func() {
@@ -160,6 +169,7 @@ func (t *FFmpegTask) monitorProgress() {
 			t.Status.Output = append(t.Status.Output, "[stdout] "+line)
 			t.Status.UpdatedAt = time.Now()
 			t.Mutex.Unlock()
+			fmt.Println("[FFmpeg stdout] ", line)
 		}
 	}()
 
@@ -174,6 +184,8 @@ func (t *FFmpegTask) monitorProgress() {
 		t.Mutex.Lock()
 		t.Status.Output = append(t.Status.Output, "[stderr] "+line)
 		t.Status.UpdatedAt = time.Now()
+
+		fmt.Println("[FFmpeg stderr] ", line)
 
 		// 解析进度信息
 		if matches := progressRegex.FindStringSubmatch(line); len(matches) > 1 {
