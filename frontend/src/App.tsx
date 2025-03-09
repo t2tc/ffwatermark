@@ -41,12 +41,6 @@ function App() {
             watermarkImage={watermarkImage}
             outputDir={outputDir}
             onOutputDirChange={setOutputDir}
-            onExecute={() => {
-              // TODO: 将水印图像和选中的文件发送到后端处理
-              console.log('水印图像:', watermarkImage)
-              console.log('选中的文件:', selectedFiles)
-              console.log('输出目录:', outputDir)
-            }}
           />
         )}
       </div>
